@@ -29,7 +29,19 @@ namespace ProductCatalogueApi.Controllers
             if (product == null)
                 return NotFound();
 
-            return Ok(product);
+            var productType = _productService.GetProductTypeById(product.ProductTypeId);
+            if (productType == null)
+                return NotFound();
+
+            var productWithCategory = new ProductWithCategory
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                ProductTypeName = productType.Name
+            };
+
+            return Ok(productWithCategory);
         }
 
         [HttpPost]
@@ -60,6 +72,13 @@ namespace ProductCatalogueApi.Controllers
                 return NotFound();
 
             return NoContent();
+        }
+
+        [HttpGet("product-types")]
+        public IActionResult GetProductTypes()
+        {
+            var productTypes = _productService.GetProductTypes();
+            return Ok(productTypes);
         }
     }
 }

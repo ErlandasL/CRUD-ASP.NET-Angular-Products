@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ProductService } from '../product.service';
 import { Product } from '../models/product.model';
+import { ProductType } from '../models/product-type.model';
 
 @Component({
   selector: 'app-product-list',
@@ -9,29 +10,55 @@ import { Product } from '../models/product.model';
     <h2>Product List</h2>
     <ul>
       <li *ngFor="let product of products">
-        {{ product.name }} - {{ product.description }}
+        <h3>{{ product.name }}</h3>
+        <p>{{ product.description }}</p>
+        <p>Product Type: {{ getProductTypeName(product.productTypeId) }}</p>
         <button (click)="editProduct(product)">Edit</button>
         <button (click)="deleteProduct(product.id)">Delete</button>
       </li>
     </ul>
 
     <app-product-form [mode]="'add'" (productAdded)="onProductAdded($event)"></app-product-form>
-    <app-product-form [mode]="'edit'" *ngIf="selectedProduct !== null" [product]="selectedProduct" (productUpdated)="onProductUpdated($event)"></app-product-form>  `
+    <app-product-form [mode]="'edit'" *ngIf="selectedProduct !== null" [product]="selectedProduct" (productUpdated)="onProductUpdated($event)"></app-product-form>
+  `
 })
 export class ProductListComponent implements OnInit {
   products: Product[] = [];
   selectedProduct: Product | null = null;
+  productTypes: ProductType[] = [];
 
   constructor(private productService: ProductService) {}
 
   ngOnInit(): void {
-    this.getProducts();
+    this.loadProducts();
+    this.loadProductTypes();
   }
 
-  getProducts(): void {
-    this.productService.getProducts().subscribe((products) => {
-      this.products = products;
-    });
+  loadProducts(): void {
+    this.productService.getProducts().subscribe(
+      (products) => {
+        this.products = products;
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
+  }
+
+  loadProductTypes(): void {
+    this.productService.getProductTypes().subscribe(
+      (types: ProductType[]) => {
+        this.productTypes = types;
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
+  }
+
+  getProductTypeName(productTypeId: number): string {
+    const productType = this.productTypes.find((type) => type.id === productTypeId);
+    return productType ? productType.name : '';
   }
 
   onProductAdded(product: Product): void {
@@ -52,9 +79,14 @@ export class ProductListComponent implements OnInit {
   }
 
   deleteProduct(productId: number): void {
-    this.productService.deleteProduct(productId).subscribe(() => {
-      this.products = this.products.filter((p) => p.id !== productId);
-      console.log('Product deleted successfully:', productId);
-    });
+    this.productService.deleteProduct(productId).subscribe(
+      () => {
+        this.products = this.products.filter((p) => p.id !== productId);
+        console.log('Product deleted successfully:', productId);
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
   }
 }

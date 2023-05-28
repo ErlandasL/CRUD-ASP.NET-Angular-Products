@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using ProductCatalogueApi.Data;
 using ProductCatalogueApi.Interfaces;
 using ProductCatalogueApi.Services;
+using ProductCatalogueApi.Models;
 
 namespace ProductCatalogueApi
 {
@@ -27,14 +28,14 @@ namespace ProductCatalogueApi
             services.AddControllers();
 
             services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
                 {
-                    options.AddDefaultPolicy(builder =>
-                    {
-                        builder.WithOrigins("http://localhost:4200")
-                            .AllowAnyHeader()
-                            .AllowAnyMethod();
-                    });
+                    builder.WithOrigins("http://localhost:4200")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
                 });
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnChanges } from '@angular/core
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProductService } from '../product.service';
 import { Product } from '../models/product.model';
+import { ProductType } from '../models/product-type.model';
 
 @Component({
   selector: 'app-product-form',
@@ -17,6 +18,12 @@ import { Product } from '../models/product.model';
         <label for="description">Description:</label>
         <textarea formControlName="description" required></textarea>
       </div>
+      <div>
+        <label for="productType">Product Type:</label>
+        <select formControlName="productType" required>
+          <option *ngFor="let type of productTypes" [value]="type.id">{{ type.name }}</option>
+        </select>
+      </div>
       <button type="submit" [disabled]="productForm.invalid">{{ mode === 'add' ? 'Add' : 'Update' }}</button>
     </form>
   `
@@ -28,11 +35,13 @@ export class ProductFormComponent implements OnChanges {
   @Output() productUpdated: EventEmitter<Product> = new EventEmitter<Product>();
 
   productForm: FormGroup;
+  productTypes: ProductType[] = [];
 
   constructor(private formBuilder: FormBuilder, private productService: ProductService) {
     this.productForm = this.formBuilder.group({
       name: ['', Validators.required],
-      description: ['', Validators.required]
+      description: ['', Validators.required],
+      productType: ['', Validators.required]
     });
   }
 
@@ -40,9 +49,30 @@ export class ProductFormComponent implements OnChanges {
     if (this.mode === 'edit' && this.product) {
       this.productForm.setValue({
         name: this.product.name ?? '',
-        description: this.product.description ?? ''
+        description: this.product.description ?? '',
+        productType: this.product.productTypeId ?? ''
       });
     }
+  }
+
+  ngOnInit(): void {
+    this.loadProductTypes();
+  }
+
+  loadProductTypes(): void {
+    this.productService.getProductTypes().subscribe(
+      (response: any) => {
+        this.productTypes = response.map((item: any) => {
+          return {
+            id: item.id,
+            name: item.name
+          };
+        });
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
   }
 
   onSubmit(): void {
@@ -50,30 +80,40 @@ export class ProductFormComponent implements OnChanges {
       return;
     }
 
-    const newProduct: Product = {
-      id: 0, // Assigning a temporary ID
-      name: this.productForm.value.name ?? '',
-      description: this.productForm.value.description ?? ''
+    const product: Product = {
+      id: 0, // Temporary ID
+      name: this.productForm.value.name,
+      description: this.productForm.value.description,
+      productTypeId: this.productForm.value.productType
     };
 
     if (this.mode === 'add') {
-      this.productService.addProduct(newProduct).subscribe((addedProduct) => {
-        console.log('Product added successfully');
-        this.productAdded.emit(addedProduct); // Emit event to notify parent component
-        this.resetForm();
-      });
+      this.productService.createProduct(product).subscribe(
+        (createdProduct) => {
+          this.productAdded.emit(createdProduct);
+          this.resetForm();
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
     } else if (this.mode === 'edit') {
       const updatedProduct: Product = {
         id: this.product.id,
-        name: this.productForm.value.name ?? '',
-        description: this.productForm.value.description ?? ''
+        name: this.productForm.value.name,
+        description: this.productForm.value.description,
+        productTypeId: this.productForm.value.productType
       };
 
-      this.productService.updateProduct(updatedProduct).subscribe(() => {
-        console.log('Product updated successfully');
-        this.productUpdated.emit(updatedProduct); // Emit event to notify parent component
-        this.resetForm();
-      });
+      this.productService.updateProduct(updatedProduct).subscribe(
+        () => {
+          this.productUpdated.emit(updatedProduct);
+          this.resetForm();
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
     }
   }
 
