@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using ProductCatalogueApi.Data;
 using ProductCatalogueApi.Interfaces;
 using ProductCatalogueApi.Services;
+using ProductCatalogueApi.Models;
 
 namespace ProductCatalogueApi
 {
@@ -27,14 +28,14 @@ namespace ProductCatalogueApi
             services.AddControllers();
 
             services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
                 {
-                    options.AddDefaultPolicy(builder =>
-                    {
-                        builder.WithOrigins("http://localhost:4200")
-                            .AllowAnyHeader()
-                            .AllowAnyMethod();
-                    });
+                    builder.WithOrigins("http://localhost:4200")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
                 });
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -52,6 +53,25 @@ namespace ProductCatalogueApi
             {
                 endpoints.MapControllers();
             });
+
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                context.Database.Migrate(); // Apply any pending migrations
+
+                if (!context.ProductTypes.Any())
+                {
+                    var productTypes = new[]
+                    {
+                        new ProductType { Name = "Phone" },
+                        new ProductType { Name = "Laptop" },
+                        new ProductType { Name = "TV" }
+                    };
+
+                    context.ProductTypes.AddRange(productTypes);
+                    context.SaveChanges();
+                }
+            }
         }
     }
 }

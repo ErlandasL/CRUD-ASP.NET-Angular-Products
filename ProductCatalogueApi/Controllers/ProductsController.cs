@@ -29,13 +29,34 @@ namespace ProductCatalogueApi.Controllers
             if (product == null)
                 return NotFound();
 
-            return Ok(product);
+            var productType = _productService.GetProductTypeById(product.ProductTypeId);
+            if (productType == null)
+                return NotFound();
+
+            var productWithCategory = new ProductWithCategory
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                ProductTypeName = productType.Name
+            };
+
+            return Ok(productWithCategory);
         }
 
         [HttpPost]
         public IActionResult CreateProduct(Product product)
         {
             var createdProduct = _productService.CreateProduct(product);
+
+            // Get the corresponding product type
+            var productType = _productService.GetProductTypeById(product.ProductTypeId);
+            if (productType != null)
+            {
+                // Add the created product to the product type's products list
+                productType.Products.Add(createdProduct);
+            }
+
             return CreatedAtAction(nameof(GetProductById), new { id = createdProduct.Id }, createdProduct);
         }
 
@@ -60,6 +81,13 @@ namespace ProductCatalogueApi.Controllers
                 return NotFound();
 
             return NoContent();
+        }
+
+        [HttpGet("product-types")]
+        public IActionResult GetProductTypes()
+        {
+            var productTypes = _productService.GetProductTypes();
+            return Ok(productTypes);
         }
     }
 }

@@ -10,5 +10,7 @@ namespace ProductCatalogueApi.Interfaces
         Product CreateProduct(Product product);
         Product UpdateProduct(Product product);
         Product DeleteProduct(int id);
+        ProductType GetProductTypeById(int id);
+        IEnumerable<ProductType> GetProductTypes();
     }
 }

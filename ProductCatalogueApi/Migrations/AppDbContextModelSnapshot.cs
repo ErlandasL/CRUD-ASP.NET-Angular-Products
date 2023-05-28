@@ -30,9 +30,43 @@ namespace ProductCatalogueApi.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("ProductTypeId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("ProductTypeId");
+
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("ProductCatalogueApi.Models.ProductType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ProductTypes");
+                });
+
+            modelBuilder.Entity("ProductCatalogueApi.Models.Product", b =>
+                {
+                    b.HasOne("ProductCatalogueApi.Models.ProductType", null)
+                        .WithMany("Products")
+                        .HasForeignKey("ProductTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ProductCatalogueApi.Models.ProductType", b =>
+                {
+                    b.Navigation("Products");
                 });
 #pragma warning restore 612, 618
         }
