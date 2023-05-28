@@ -65,7 +65,6 @@ export class ProductListComponent implements OnInit {
   }
 
   getProductTypeName(productTypeId: number): string {
-    console.log('rerender');
     const productType = this.productTypes.find((type) => type.id === productTypeId);
     return productType ? productType.name : '';
   }
@@ -78,10 +77,13 @@ export class ProductListComponent implements OnInit {
     const index = this.products.findIndex((p) => p.id === updatedProduct.id);
     if (index !== -1) {
       this.products[index] = updatedProduct;
-      this.products[index].productTypeName = 'laptop'
+      this.products[index].productTypeName = this.getProductTypeName(updatedProduct.productTypeId);
       console.log('Product updated successfully:', updatedProduct);
       this.selectedProduct = null; // Clear the selected product
     }
+
+    this.loadProducts();
+    this.loadProductTypes();
   }
 
   editProduct(product: Product): void {
