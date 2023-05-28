@@ -48,6 +48,15 @@ namespace ProductCatalogueApi.Controllers
         public IActionResult CreateProduct(Product product)
         {
             var createdProduct = _productService.CreateProduct(product);
+
+            // Get the corresponding product type
+            var productType = _productService.GetProductTypeById(product.ProductTypeId);
+            if (productType != null)
+            {
+                // Add the created product to the product type's products list
+                productType.Products.Add(createdProduct);
+            }
+
             return CreatedAtAction(nameof(GetProductById), new { id = createdProduct.Id }, createdProduct);
         }
 

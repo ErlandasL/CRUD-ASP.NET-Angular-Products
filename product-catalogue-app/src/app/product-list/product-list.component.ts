@@ -45,10 +45,18 @@ export class ProductListComponent implements OnInit {
     );
   }
 
+  updateProductTypeName(): void {
+    for (const product of this.products) {
+      const productType = this.productTypes.find((type) => type.id === product.productTypeId);
+      product.productTypeName = productType ? productType.name : '';
+    }
+  }
+
   loadProductTypes(): void {
     this.productService.getProductTypes().subscribe(
       (types: ProductType[]) => {
         this.productTypes = types;
+        this.updateProductTypeName();
       },
       (error) => {
         console.log(error);
@@ -57,6 +65,7 @@ export class ProductListComponent implements OnInit {
   }
 
   getProductTypeName(productTypeId: number): string {
+    console.log('rerender');
     const productType = this.productTypes.find((type) => type.id === productTypeId);
     return productType ? productType.name : '';
   }
@@ -69,6 +78,7 @@ export class ProductListComponent implements OnInit {
     const index = this.products.findIndex((p) => p.id === updatedProduct.id);
     if (index !== -1) {
       this.products[index] = updatedProduct;
+      this.products[index].productTypeName = 'laptop'
       console.log('Product updated successfully:', updatedProduct);
       this.selectedProduct = null; // Clear the selected product
     }

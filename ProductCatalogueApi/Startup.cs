@@ -53,6 +53,25 @@ namespace ProductCatalogueApi
             {
                 endpoints.MapControllers();
             });
+
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                context.Database.Migrate(); // Apply any pending migrations
+
+                if (!context.ProductTypes.Any())
+                {
+                    var productTypes = new[]
+                    {
+                        new ProductType { Name = "Phone" },
+                        new ProductType { Name = "Laptop" },
+                        new ProductType { Name = "TV" }
+                    };
+
+                    context.ProductTypes.AddRange(productTypes);
+                    context.SaveChanges();
+                }
+            }
         }
     }
 }

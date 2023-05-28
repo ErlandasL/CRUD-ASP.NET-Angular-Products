@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProductService } from '../product.service';
 import { Product } from '../models/product.model';
@@ -20,7 +20,7 @@ import { ProductType } from '../models/product-type.model';
       </div>
       <div>
         <label for="productType">Product Type:</label>
-        <select formControlName="productType" required>
+        <select formControlName="productType" (change)="updateProductTypeName()" required>
           <option *ngFor="let type of productTypes" [value]="type.id">{{ type.name }}</option>
         </select>
       </div>
@@ -28,7 +28,7 @@ import { ProductType } from '../models/product-type.model';
     </form>
   `
 })
-export class ProductFormComponent implements OnChanges {
+export class ProductFormComponent implements OnInit {
   @Input() mode: 'add' | 'edit' = 'add';
   @Input() product!: Product;
   @Output() productAdded: EventEmitter<Product> = new EventEmitter<Product>();
@@ -36,6 +36,7 @@ export class ProductFormComponent implements OnChanges {
 
   productForm: FormGroup;
   productTypes: ProductType[] = [];
+  productTypeName: string = '';
 
   constructor(private formBuilder: FormBuilder, private productService: ProductService) {
     this.productForm = this.formBuilder.group({
@@ -43,16 +44,6 @@ export class ProductFormComponent implements OnChanges {
       description: ['', Validators.required],
       productType: ['', Validators.required]
     });
-  }
-
-  ngOnChanges(): void {
-    if (this.mode === 'edit' && this.product) {
-      this.productForm.setValue({
-        name: this.product.name ?? '',
-        description: this.product.description ?? '',
-        productType: this.product.productTypeId ?? ''
-      });
-    }
   }
 
   ngOnInit(): void {
@@ -68,11 +59,30 @@ export class ProductFormComponent implements OnChanges {
             name: item.name
           };
         });
+
+        if (this.mode === 'edit') {
+          this.patchProductFormValues();
+          this.updateProductTypeName();
+        }
       },
       (error) => {
         console.log(error);
       }
     );
+  }
+
+  patchProductFormValues(): void {
+    this.productForm.patchValue({
+      name: this.product.name ?? '',
+      description: this.product.description ?? '',
+      productType: this.product.productTypeId ?? ''
+    });
+  }
+
+  updateProductTypeName(): void {
+    const productTypeId = this.productForm.value.productType;
+    const productType = this.productTypes.find((type) => type.id === productTypeId);
+    this.productTypeName = productType ? productType.name : '';
   }
 
   onSubmit(): void {
@@ -119,5 +129,6 @@ export class ProductFormComponent implements OnChanges {
 
   resetForm(): void {
     this.productForm.reset();
+    this.productTypeName = '';
   }
 }
